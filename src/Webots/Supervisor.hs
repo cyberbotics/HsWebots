@@ -413,3 +413,119 @@ wb_supervisor_movie_get_status :: IO CInt
 wb_supervisor_movie_get_status  =
    [C.exp| int { wb_supervisor_movie_get_status() } |]
 
+
+loop :: CInt -> (Int -> IO ()) -> IO ()
+loop time_step func = loop' 0
+  where
+    loop' cnt = do
+      i <- [C.exp| int { wb_robot_step($(int time_step)) }|]
+      whenM (i /= -1) $ do
+        func cnt
+        loop' (cnt+1)
+
+withWbRobot func = do
+  time <- [C.block| int {
+    wb_robot_init();
+    return wb_robot_get_basic_time_step();
+  }|]
+  func time
+  [C.exp| void { wb_robot_cleanup() }|]
+
+fieldGetCount :: WbFieldRef -> IO CInt
+fieldGetCount ptr = [C.exp| int { wb_supervisor_field_get_count($(WbFieldRef ptr)) } |]
+
+
+fieldGetSfBool :: WbFieldRef -> IO CBool
+fieldGetSfBool ptr = [C.exp|bool {wb_supervisor_field_get_sf_bool($(WbFieldRef ptr))}|]
+
+fieldGetSfInt32 :: WbFieldRef -> IO CInt
+fieldGetSfInt32 ptr = [C.exp|int {wb_supervisor_field_get_sf_int32($(WbFieldRef ptr))}|]
+
+fieldGetSfFloat :: WbFieldRef -> IO CDouble
+fieldGetSfFloat ptr = [C.exp|double {wb_supervisor_field_get_sf_float($(WbFieldRef ptr))}|]
+
+fieldGetSfVec2f :: WbFieldRef -> IO (CDouble,CDouble)
+fieldGetSfVec2f ptr = do
+  ptr <- [C.exp|const double * {wb_supervisor_field_get_sf_vec2f($(WbFieldRef ptr))}|]
+  x <- peek ptr
+  y <- peekByteOff ptr (sizeOf x)
+  return (x,y)
+  
+fieldGetSfVec3f :: WbFieldRef -> IO (CDouble,CDouble,CDouble)
+fieldGetSfVec3f ptr = do
+  ptr <- [C.exp|const double * {wb_supervisor_field_get_sf_vec3f($(WbFieldRef ptr))}|]
+  x <- peek ptr
+  y <- peekByteOff ptr (sizeOf x)
+  z <- peekByteOff ptr ((sizeOf x)*2)
+  return (x,y,z)
+
+fieldGetSfRotation :: WbFieldRef -> IO (CDouble,CDouble,CDouble,CDouble)
+fieldGetSfRotation ptr = do
+  ptr <- [C.exp|const double *{wb_supervisor_field_get_sf_rotation($(WbFieldRef ptr))}|]
+  a <- peek ptr
+  b <- peekByteOff ptr (sizeOf a)
+  c <- peekByteOff ptr ((sizeOf a)*2)
+  d <- peekByteOff ptr ((sizeOf a)*3)
+  return (a,b,c,d)
+
+fieldGetSfColor :: WbFieldRef -> IO (CDouble,CDouble,CDouble)
+fieldGetSfColor ptr = do
+  ptr <- [C.exp|const double *{wb_supervisor_field_get_sf_color($(WbFieldRef ptr))}|]
+  x <- peek ptr
+  y <- peekByteOff ptr (sizeOf x)
+  z <- peekByteOff ptr ((sizeOf x)*2)
+  return (x,y,z)
+
+fieldGetSfString :: WbFieldRef -> IO String
+fieldGetSfString ptr =
+  peekCString =<< [C.exp|const char *{wb_supervisor_field_get_sf_string($(WbFieldRef ptr))}|]
+
+fieldGetMfNode :: WbFieldRef -> CInt -> IO WbNodeRef
+fieldGetMfNode ptr i = [C.exp| WbNodeRef { wb_supervisor_field_get_mf_node($(WbFieldRef ptr), $(int i)) } |]
+
+getField :: WbNodeRef -> String -> IO WbFieldRef
+getField ptr str =
+  withCString str $ \cstr -> 
+    [C.exp| WbFieldRef { wb_supervisor_node_get_field($(WbNodeRef ptr), $(char* cstr)) } |]
+
+getId :: WbNodeRef -> IO CInt
+getId ptr =
+  [C.exp| int { wb_supervisor_node_get_id($(WbNodeRef ptr)) } |]
+
+getTypeName :: WbNodeRef -> IO String
+getTypeName ptr =
+  [C.exp| const char* { wb_supervisor_node_get_type_name($(WbNodeRef ptr)) } |] >>= peekCString
+
+getRootNode :: IO WbNodeRef
+getRootNode = [C.exp| WbNodeRef { wb_supervisor_node_get_root()} |]
+
+setVelocity :: WbNodeRef -> (CDouble,CDouble,CDouble) -> (CDouble,CDouble,CDouble) -> IO ()
+setVelocity node (x,y,z) (x1,y1,z1) = 
+  [C.block| void {
+      const double velocity[6] =
+      { $(double x)
+      , $(double y)
+      , $(double z)
+      , $(double x1)
+      , $(double y1)
+      , $(double z1)
+      };
+      wb_supervisor_node_set_velocity($(WbNodeRef node), velocity);
+  } |]
+
+whenM cond block = if cond then block else return ()
+
+getRootNodes :: IO [(WbNodeRef,CInt,String)]
+getRootNodes = do
+  root <- getRootNode
+  children <- getField root "children"
+  cnt <- fieldGetCount children
+  forM [0..(cnt-1)] $ \i -> do
+    node <- fieldGetMfNode children i
+    nodeId <- getId node
+    typeName <- getTypeName node
+    return (node,nodeId,typeName)
+
+getNodeFieldByString :: WbNodeRef -> String -> IO String
+getNodeFieldByString node label = getField node label >>= fieldGetSfString
+
