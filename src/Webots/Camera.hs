@@ -6,16 +6,26 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Webots.Camera where
 
+import           Control.Exception.Safe         ( try
+                                                , SomeException(..)
+                                                , throwIO
+                                                )
 import Foreign.Ptr
 import Foreign.Storable
 import Foreign.C.String
 
-import qualified Language.C.Inline as C
+import qualified Language.C.Inline         as C
 import qualified Language.C.Inline.Context as C
-import qualified Language.C.Types as C
+import qualified Language.C.Types          as C
 import Language.C.Inline.Cpp (cppTypePairs)
 import Foreign.C.Types
 import Control.Monad (forM_,forM)
+import qualified Codec.Picture             as I
+
+import qualified Data.Vector.Storable      as V
+import qualified Foreign.ForeignPtr        as F
+import qualified Foreign.Ptr               as F
+import qualified Data.ByteString.Internal  as BSI
 
 import Webots.Types
 
@@ -38,13 +48,26 @@ wb_camera_get_sampling_period :: WbDeviceTag -> IO CInt
 wb_camera_get_sampling_period tag =
    [C.exp| int { wb_camera_get_sampling_period($(WbDeviceTag tag)) } |]
 
-
--- |
--- ToDo: This function should return bytestring
-wb_camera_get_image :: WbDeviceTag -> IO String 
-wb_camera_get_image tag =
-   peekCString =<< [C.exp| const char* { wb_camera_get_image($(WbDeviceTag tag)) } |]
-
+wb_camera_get_image :: WbDeviceTag -> IO (I.Image I.PixelRGBA8)
+wb_camera_get_image tag = do
+  let channel = 4
+      zero = I.PixelRGBA8 0 0 0 0
+  width <- fromIntegral <$> wb_camera_get_width tag
+  height <- fromIntegral <$> wb_camera_get_height tag
+  ptr1 <- [C.exp| const char* { wb_camera_get_image($(WbDeviceTag tag)) } |]
+  let img@(I.Image w h vec) = I.generateImage (\_ _ -> zero) width height
+  let (fptr,len) = V.unsafeToForeignPtr0 vec
+      whc = width * height * channel
+  if (len /= whc) then
+    throwIO $ userError  $ "vector's length(" ++ show len ++ ") is not the same as image' one."
+  else do
+    F.withForeignPtr fptr $ \ptr2 -> do
+      BSI.memcpy (F.castPtr ptr2) (F.castPtr ptr1) len
+--      return $ I.pixelMap bgr2rgb img
+      return $ img
+  where
+    bgr2rgb (I.PixelRGBA8 b g r a) = I.PixelRGBA8 r g b a
+  
 wb_camera_get_width :: WbDeviceTag -> IO CInt 
 wb_camera_get_width tag =
    [C.exp| int { wb_camera_get_width($(WbDeviceTag tag)) } |]
@@ -117,3 +140,35 @@ wb_camera_recognition_get_sampling_period tag =
 wb_camera_recognition_get_number_of_objects :: WbDeviceTag -> IO CInt 
 wb_camera_recognition_get_number_of_objects tag =
    [C.exp| int { wb_camera_recognition_get_number_of_objects($(WbDeviceTag tag)) } |]
+
+wb_camera_recognition_get_objects :: WbDeviceTag -> IO [WbCameraRecognitionObject]
+wb_camera_recognition_get_objects tag = do
+   num <- wb_camera_recognition_get_number_of_objects tag
+   ptr <- [C.exp| const WbCameraRecognitionObject* { wb_camera_recognition_get_objects($(WbDeviceTag tag)) } |]
+   forM [0..(num-1)] $ \i -> do
+     obj_id <- [C.exp| int { $(WbCameraRecognitionObject* ptr)[$(int i)].id } |]
+     obj_position <- (,,)
+       <$> [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].position[0] } |]
+       <*> [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].position[1] } |]
+       <*> [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].position[2] } |]
+     obj_orientation <- (,,,)
+       <$> [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].orientation[0] } |]
+       <*> [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].orientation[1] } |]
+       <*> [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].orientation[2] } |]
+       <*> [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].orientation[3] } |]
+     obj_size <- (,)
+       <$> [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].size[0] } |]
+       <*> [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].size[1] } |]
+     obj_position_on_image <- (,)
+       <$> [C.exp| int { $(WbCameraRecognitionObject* ptr)[$(int i)].position_on_image[0] } |]
+       <*> [C.exp| int { $(WbCameraRecognitionObject* ptr)[$(int i)].position_on_image[1] } |]
+     obj_size_on_image <- (,)
+       <$> [C.exp| int { $(WbCameraRecognitionObject* ptr)[$(int i)].size_on_image[0] } |]
+       <*> [C.exp| int { $(WbCameraRecognitionObject* ptr)[$(int i)].size_on_image[1] } |]
+     obj_number_of_colors  <- [C.exp| int { $(WbCameraRecognitionObject* ptr)[$(int i)].number_of_colors } |]
+     obj_colors <- forM [0..(obj_number_of_colors-1)] $ \j ->
+       [C.exp| double { $(WbCameraRecognitionObject* ptr)[$(int i)].colors[$(int j)] } |]
+     obj_model <- peekCString =<< [C.exp| const char* { $(WbCameraRecognitionObject* ptr)[$(int i)].model } |]
+     return $ WbCameraRecognitionObject{..}
+   
+

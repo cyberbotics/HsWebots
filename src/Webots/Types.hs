@@ -16,6 +16,18 @@ data WbField
 data WbNode
 data WbMutex
 
+data WbCameraRecognitionObject = WbCameraRecognitionObject
+  { obj_id :: CInt
+  , obj_position :: (CDouble,CDouble,CDouble)
+  , obj_orientation :: (CDouble,CDouble,CDouble,CDouble)
+  , obj_size :: (CDouble,CDouble)
+  , obj_position_on_image :: (CInt,CInt)
+  , obj_size_on_image :: (CInt,CInt)
+  , obj_number_of_colors :: CInt
+  , obj_colors :: [CDouble]
+  , obj_model :: String
+  } deriving (Show,Eq)
+
 type WbFieldRef = Ptr WbField
 type WbNodeRef = Ptr WbNode
 type WbMutexRef = Ptr WbMutex
@@ -45,4 +57,5 @@ typeMaps =
   , ("WbuDriverIndicatorState", [t|CInt|])
   , ("WbuDriverControlMode",    [t|CInt|])
   , ("WbuDriverWiperMode",      [t|CInt|])
+  , ("WbCameraRecognitionObject",      [t|WbCameraRecognitionObject|])
   ]
