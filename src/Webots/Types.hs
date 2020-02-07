@@ -16,6 +16,14 @@ data WbField
 data WbNode
 data WbMutex
 
+data WbSimulationMode'
+  = WB_SUPERVISOR_SIMULATION_MODE_PAUSE
+  | WB_SUPERVISOR_SIMULATION_MODE_REAL_TIME
+  | WB_SUPERVISOR_SIMULATION_MODE_RUN
+  | WB_SUPERVISOR_SIMULATION_MODE_FAST
+  deriving (Show,Eq)
+
+
 data WbCameraRecognitionObject = WbCameraRecognitionObject
   { obj_id :: CInt
   , obj_position :: (CDouble,CDouble,CDouble)

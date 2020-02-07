@@ -53,13 +53,23 @@ wb_supervisor_simulation_reset_physics :: IO ()
 wb_supervisor_simulation_reset_physics  =
    [C.exp| void { wb_supervisor_simulation_reset_physics() } |]
 
-wb_supervisor_simulation_get_mode :: IO WbSimulationMode 
-wb_supervisor_simulation_get_mode  =
-   [C.exp| WbSimulationMode { wb_supervisor_simulation_get_mode() } |]
+wb_supervisor_simulation_get_mode :: IO WbSimulationMode'
+wb_supervisor_simulation_get_mode  = do
+  v <- [C.exp| WbSimulationMode { wb_supervisor_simulation_get_mode() } |]
+  case v of
+    0 -> return WB_SUPERVISOR_SIMULATION_MODE_PAUSE
+    1 -> return WB_SUPERVISOR_SIMULATION_MODE_REAL_TIME
+    2 -> return WB_SUPERVISOR_SIMULATION_MODE_RUN
+    _ -> return WB_SUPERVISOR_SIMULATION_MODE_FAST
 
-wb_supervisor_simulation_set_mode :: WbSimulationMode -> IO () 
-wb_supervisor_simulation_set_mode mode =
-   [C.exp| void { wb_supervisor_simulation_set_mode($(WbSimulationMode mode)) } |]
+wb_supervisor_simulation_set_mode :: WbSimulationMode' -> IO () 
+wb_supervisor_simulation_set_mode mode = do
+  let mode' = case mode of
+        WB_SUPERVISOR_SIMULATION_MODE_PAUSE -> 0
+        WB_SUPERVISOR_SIMULATION_MODE_REAL_TIME -> 1
+        WB_SUPERVISOR_SIMULATION_MODE_RUN -> 2
+        WB_SUPERVISOR_SIMULATION_MODE_FAST -> 3
+  [C.exp| void { wb_supervisor_simulation_set_mode($(WbSimulationMode mode')) } |]
 
 wb_supervisor_set_label :: CInt -> String -> CDouble -> CDouble -> CDouble -> CInt -> CDouble -> String -> IO () 
 wb_supervisor_set_label id text x y size color transparency font =
@@ -164,13 +174,20 @@ wb_supervisor_node_get_number_of_contact_points :: WbNodeRef -> IO CInt
 wb_supervisor_node_get_number_of_contact_points node =
    [C.exp| int { wb_supervisor_node_get_number_of_contact_points($(WbNodeRef node)) } |]
 
-wb_supervisor_node_get_orientation :: WbNodeRef -> IO (Ptr CDouble)
+wb_supervisor_node_get_orientation :: WbNodeRef -> IO (CDouble,CDouble,CDouble,CDouble)
 wb_supervisor_node_get_orientation node =
-   [C.exp| const double* { wb_supervisor_node_get_orientation($(WbNodeRef node)) } |]
+   (,,,) <$>
+   [C.exp| double { wb_supervisor_node_get_orientation($(WbNodeRef node))[0] } |] <*>
+   [C.exp| double { wb_supervisor_node_get_orientation($(WbNodeRef node))[1] } |] <*>
+   [C.exp| double { wb_supervisor_node_get_orientation($(WbNodeRef node))[2] } |] <*>
+   [C.exp| double { wb_supervisor_node_get_orientation($(WbNodeRef node))[2] } |]
 
-wb_supervisor_node_get_position :: WbNodeRef -> IO (Ptr CDouble) 
+wb_supervisor_node_get_position :: WbNodeRef -> IO (CDouble,CDouble,CDouble)
 wb_supervisor_node_get_position node =
-   [C.exp| const double* { wb_supervisor_node_get_position($(WbNodeRef node)) } |]
+   (,,) <$>
+   [C.exp| double { wb_supervisor_node_get_position($(WbNodeRef node))[0] } |] <*>
+   [C.exp| double { wb_supervisor_node_get_position($(WbNodeRef node))[1] } |] <*>
+   [C.exp| double { wb_supervisor_node_get_position($(WbNodeRef node))[2] } |]
 
 wb_supervisor_node_get_static_balance :: WbNodeRef -> IO CBool 
 wb_supervisor_node_get_static_balance node =
