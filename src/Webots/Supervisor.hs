@@ -141,10 +141,14 @@ wb_supervisor_node_get_type :: WbNodeRef -> IO WbNodeType
 wb_supervisor_node_get_type node =
    [C.exp| WbNodeType { wb_supervisor_node_get_type($(WbNodeRef node)) } |]
 
-wb_supervisor_node_get_field :: WbNodeRef -> String -> IO WbFieldRef 
-wb_supervisor_node_get_field node field_name =
-  withCString field_name $ \field_name' -> 
-   [C.exp| WbFieldRef { wb_supervisor_node_get_field($(WbNodeRef node), $(const char* field_name')) } |]
+wb_supervisor_node_get_field :: WbNodeRef -> String -> IO (Maybe WbFieldRef)
+wb_supervisor_node_get_field node field_name = do
+  ptr <- withCString field_name $ \field_name' -> 
+           [C.exp| WbFieldRef { wb_supervisor_node_get_field($(WbNodeRef node), $(const char* field_name')) } |]
+  if ptr == nullPtr
+  then return Nothing
+  else return $ Just ptr
+    
 
 wb_supervisor_node_remove :: WbNodeRef -> IO () 
 wb_supervisor_node_remove node =
@@ -500,10 +504,8 @@ fieldGetSfString ptr =
 fieldGetMfNode :: WbFieldRef -> CInt -> IO WbNodeRef
 fieldGetMfNode ptr i = [C.exp| WbNodeRef { wb_supervisor_field_get_mf_node($(WbFieldRef ptr), $(int i)) } |]
 
-getField :: WbNodeRef -> String -> IO WbFieldRef
-getField ptr str =
-  withCString str $ \cstr -> 
-    [C.exp| WbFieldRef { wb_supervisor_node_get_field($(WbNodeRef ptr), $(char* cstr)) } |]
+getField :: WbNodeRef -> String -> IO (Maybe WbFieldRef)
+getField ptr str = wb_supervisor_node_get_field ptr str
 
 getId :: WbNodeRef -> IO CInt
 getId ptr =
@@ -535,14 +537,20 @@ whenM cond block = if cond then block else return ()
 getRootNodes :: IO [(WbNodeRef,CInt,String)]
 getRootNodes = do
   root <- getRootNode
-  children <- getField root "children"
-  cnt <- fieldGetCount children
-  forM [0..(cnt-1)] $ \i -> do
-    node <- fieldGetMfNode children i
-    nodeId <- getId node
-    typeName <- getTypeName node
-    return (node,nodeId,typeName)
+  mchildren <- getField root "children"
+  case mchildren of
+    Nothing -> return []
+    Just children -> do
+      cnt <- fieldGetCount children
+      forM [0..(cnt-1)] $ \i -> do
+        node <- fieldGetMfNode children i
+        nodeId <- getId node
+        typeName <- getTypeName node
+        return (node,nodeId,typeName)
 
-getNodeFieldByString :: WbNodeRef -> String -> IO String
-getNodeFieldByString node label = getField node label >>= fieldGetSfString
-
+getNodeFieldByString :: WbNodeRef -> String -> IO (Maybe String)
+getNodeFieldByString node label = do
+  m <- getField node label
+  case m of
+    Nothing -> return Nothing
+    Just field -> fieldGetSfString field >>= return.Just
