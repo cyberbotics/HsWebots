@@ -25,6 +25,8 @@ C.include "<math.h>"
 C.include "<stdio.h>"
 C.include "<stdlib.h>"
 C.include "<webots/robot.h>"
+C.include "<webots/robot_window.h>"
+C.include "<webots/robot_wwi.h>"
 C.include "<webots/supervisor.h>"
 
 wb_robot_init :: IO CInt 
@@ -157,3 +159,18 @@ wb_robot_pin_to_static_environment :: CBool -> IO ()
 wb_robot_pin_to_static_environment pin =
    [C.exp| void { wb_robot_pin_to_static_environment($(bool pin)) } |]
 
+{-
+wb_robot_window_custom_function :: String -> IO String
+wb_robot_window_custom_function xxx =
+   withCString xxx $ \xxx' ->
+   peekCString =<< [C.exp| const char* { wb_robot_window_custom_function($(const char* xxx')) } |]
+
+wb_robot_wwi_send :: String -> CInt -> IO () 
+wb_robot_wwi_send dat size =
+  withCString dat $ \dat' ->
+  [C.exp| void { wb_robot_wwi_send($(const char* dat'), $(int size)) } |]
+
+wb_robot_wwi_receive :: CInt -> IO String 
+wb_robot_wwi_receive size =
+   peekCString =<< [C.exp| const char* { wb_robot_wwi_receive($(int size)) } |]
+-}

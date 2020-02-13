@@ -15,6 +15,10 @@ import Language.Haskell.TH
 data WbField
 data WbNode
 data WbMutex
+data WbImage
+data WbRadarTarget
+type WbRadioEvent = Ptr ()
+type WbRadioMessage = Ptr ()
 
 data WbSimulationMode'
   = WB_SUPERVISOR_SIMULATION_MODE_PAUSE
@@ -36,20 +40,37 @@ data WbCameraRecognitionObject = WbCameraRecognitionObject
   , obj_model :: String
   } deriving (Show,Eq)
 
+data WbMouseState = WbMouseState
+  { mouse_left :: CBool
+  , mouse_middle :: CBool
+  , mouse_right :: CBool
+  , mouse_u :: CDouble
+  , mouse_v :: CDouble
+  , mouse_x :: CDouble
+  , mouse_y :: CDouble
+  , mouse_z :: CDouble
+  } deriving (Show,Eq)
+
+
 type WbFieldRef = Ptr WbField
 type WbNodeRef = Ptr WbNode
 type WbMutexRef = Ptr WbMutex
+type WbImageRef = Ptr WbImage
 type WbDeviceTag = CUShort
 type WbSimulationMode = CInt
 type WbNodeType = CInt
 type WbFieldType = CInt
 type WbUserInputEvent = CInt
 type WbRobotMode = CInt
+type WbJointType = CInt
 
 type WbuDriverIndicatorState = CInt
 type WbuDriverControlMode = CInt
 type WbuDriverWiperMode = CInt
 
+type WbTouchSensorType = CInt
+type WbGpsCoordinateSystem = CInt
+type WbDistanceSensorType = CInt
 
 typeMaps :: [(C.CIdentifier,TypeQ)]
 typeMaps =
@@ -66,4 +87,13 @@ typeMaps =
   , ("WbuDriverControlMode",    [t|CInt|])
   , ("WbuDriverWiperMode",      [t|CInt|])
   , ("WbCameraRecognitionObject",      [t|WbCameraRecognitionObject|])
+  , ("WbTouchSensorType",      [t|CInt|])
+  , ("WbRadarTarget",      [t|WbRadarTarget|])
+  , ("WbRadioEvent",      [t|Ptr ()|])
+  , ("WbRadioMessage",      [t|Ptr ()|])
+  , ("WbJointType",      [t|CInt|])
+  , ("WbMouseState",      [t|WbMouseState|])
+  , ("WbGpsCoordinateSystem",      [t|CInt|])
+  , ("WbDistanceSensorType",       [t|CInt|])
+  , ("WbImageRef",       [t|Ptr WbImage|])
   ]
