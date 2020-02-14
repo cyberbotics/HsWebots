@@ -63,8 +63,10 @@ extra-deps:
 # Extra directories used by stack for building
 extra-include-dirs:
 - deps/webots/include
+- deps/webots/include/controller/c
 extra-lib-dirs:
 - deps/webots/lib
+- deps/webots/lib/controller
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor

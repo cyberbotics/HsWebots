@@ -9,3 +9,11 @@ case "$(uname)" in
     export LD_LIBRARY_PATH=$WEBOTS_HOME/lib/controller:$LD_LIBRARY_PATH
     ;;
 esac
+if ! [ -d deps ] ; then
+  mkdir deps
+fi
+if ! [ -f deps/webots ] ; then
+  pushd deps
+  ln -s ${WEBOTS_HOME} webots
+  popd
+fi
