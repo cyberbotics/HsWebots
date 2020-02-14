@@ -21,3 +21,9 @@ if ! [ -f deps/webots ] ; then
   ln -h ${WEBOTS_HOME} webots || true
   popd
 fi
+echo "$WEBOTS_HOME"
+ls -l $WEBOTS_HOME
+echo "deps"
+ls -l deps/
+echo "deps/webots/include"
+ls -l deps/webots/include
