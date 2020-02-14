@@ -13,11 +13,9 @@ jobs:
         brew install libomp || true
         pip3 install pyyaml || true
         wget -q https://github.com/cyberbotics/webots/releases/download/R2020a-rev1/webots-R2020a-rev1.dmg
-        dmgFilePath=webots-R2020a-rev1.dmg
-        MOUNTDEV=$(hdiutil mount $dmgFilePath | awk '/dev.disk/{print$1}')
-        MOUNTDIR="$(mount | grep $MOUNTDEV | awk '{$1=$2="";sub(" [(].*","");sub("^  ","");print}')"
+        dmgFilePath=`pwd`/webots-R2020a-rev1.dmg
+        MOUNTDIR=$(echo `hdiutil mount $dmgFilePath | tail -1 | awk '{$1=$2=""; print $0}'` | xargs -0 echo)
         sudo installer -pkg "${MOUNTDIR}/"*.pkg -target /
-        hdiutil unmount "$MOUNTDIR"
         (wget -qO- https://get.haskellstack.org/ | sh) || true
     - name: Build
       run: |
