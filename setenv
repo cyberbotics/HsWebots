@@ -1,11 +1,15 @@
 
 case "$(uname)" in
   "Darwin")
-    export WEBOTS_HOME=/Applications/Webots.app
+    if [ -z "$WEBOTS_HOME" ] ;then
+      export WEBOTS_HOME=/Applications/Webots.app
+    fi
     export DYLD_LIBRARY_PATH=$WEBOTS_HOME/lib/controller:$DYLD_LIBRARY_PATH
     ;;
   "Linux")
-    export WEBOTS_HOME=/usr/local/webots
+    if [ -z "$WEBOTS_HOME" ] ;then
+      export WEBOTS_HOME=/usr/local/webots
+    fi
     export LD_LIBRARY_PATH=$WEBOTS_HOME/lib/controller:$LD_LIBRARY_PATH
     ;;
 esac

@@ -14,14 +14,15 @@ jobs:
         pip3 install pyyaml || true
         wget -q https://github.com/cyberbotics/webots/releases/download/R2020a-rev1/webots-R2020a-rev1.dmg
         dmgFilePath=`pwd`/webots-R2020a-rev1.dmg
-        MOUNTDIR=$(echo `hdiutil mount $dmgFilePath | tail -1 | awk '{$1=$2=""; print $0}'` | xargs -0 echo)
-        sudo installer -pkg "${MOUNTDIR}/"*.pkg -target /
+        hdiutil mount $dmgFilePath
         (wget -qO- https://get.haskellstack.org/ | sh) || true
     - name: Build
       run: |
+        WEBOTS_HOME=/Volumes/Webots/Webots.app
         . setenv
         stack build
     - name: Test
       run: |
+        WEBOTS_HOME=/Volumes/Webots/Webots.app
         . setenv
         stack test
