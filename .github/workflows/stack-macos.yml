@@ -1,0 +1,29 @@
+name: stack-macos
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup tool-chains
+      run: |
+        /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+        brew install libomp || true
+        pip3 install pyyaml || true
+        wget -q https://github.com/cyberbotics/webots/releases/download/R2020a-rev1/webots-R2020a-rev1.dmg
+        dmgFilePath=webots-R2020a-rev1.dmg
+        MOUNTDEV=$(hdiutil mount $dmgFilePath | awk '/dev.disk/{print$1}')
+        MOUNTDIR="$(mount | grep $MOUNTDEV | awk '{$1=$2="";sub(" [(].*","");sub("^  ","");print}')"
+        sudo installer -pkg "${MOUNTDIR}/"*.pkg -target /
+        hdiutil unmount "$MOUNTDIR"
+        (wget -qO- https://get.haskellstack.org/ | sh) || true
+    - name: Build
+      run: |
+        . setenv
+        stack build
+    - name: Test
+      run: |
+        . setenv
+        stack test
