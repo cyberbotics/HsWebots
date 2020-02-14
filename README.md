@@ -18,6 +18,7 @@ source setenv
 stack build
 
 #When you generate haskell-code from c-header, type following command.
+stack build --flag HsWebots:codegen
 stack run "c-header"
 ```
 

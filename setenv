@@ -16,9 +16,9 @@ esac
 if ! [ -d deps ] ; then
   mkdir deps
 fi
-if ! [ -f deps/webots ] ; then
+if ! [ -h deps/webots ] ; then
   pushd deps
-  ln -h ${WEBOTS_HOME} webots || true
+  ln -s ${WEBOTS_HOME} webots || true
   popd
 fi
 echo "$WEBOTS_HOME"
