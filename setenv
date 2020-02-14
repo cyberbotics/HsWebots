@@ -14,6 +14,6 @@ if ! [ -d deps ] ; then
 fi
 if ! [ -f deps/webots ] ; then
   pushd deps
-  ln -s ${WEBOTS_HOME} webots
+  ln -h ${WEBOTS_HOME} webots || true
   popd
 fi
