@@ -1,0 +1,42 @@
+#VRML_SIM R2020b utf8
+WorldInfo {
+  northDirection 0.0 0.0 1.0
+  lineScale 0.0
+}
+Viewpoint {
+  orientation -1.0 0.0 0.0 1.57
+  position 0.0 171.07683 7.181024e-2
+  near 3.0
+}
+Floor {
+  translation 0.0 -1.0e-3 0.0
+  size 1000.0 1000.0
+}
+TexturedBackground {
+  
+}
+TexturedBackgroundLight {
+  
+}
+Robot {
+  controller "test"
+  controllerArgs "../../Webots/CameraSpec.hs supervisor"
+  supervisor TRUE
+}
+BmwX5 {
+  translation 0.0 0.0 0.0
+  rotation 0.0 0.0 0.0 0.0
+  name "car"
+  color 1.0 0.0 0.0
+  controller "test"
+  controllerArgs "../../Webots/CameraSpec.hs controller"
+  sensorsSlotFront [
+    Camera {
+      width 320
+      height 240
+      recognition Recognition {
+        
+      }
+    }
+  ]
+}
