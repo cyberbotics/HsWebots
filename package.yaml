@@ -31,6 +31,9 @@ dependencies:
 
 library:
   source-dirs: src
+  extra-libraries:
+    - Controller
+    - driver
 
 # executables:
 #   HsWebots-exe:
@@ -58,3 +61,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - HsWebots
+    - hspec 
+    - hspec-discover
+    - VRML
+    - process

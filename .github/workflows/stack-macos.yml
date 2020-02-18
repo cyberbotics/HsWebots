@@ -16,6 +16,7 @@ jobs:
         dmgFilePath=`pwd`/webots-R2020a-rev1.dmg
         hdiutil mount $dmgFilePath
         (wget -qO- https://get.haskellstack.org/ | sh) || true
+        #installer -pkg /Volumes/Webots/Webots.app -target /Applications
     - name: Build
       run: |
         WEBOTS_HOME=/Volumes/Webots/Webots.app
@@ -24,5 +25,6 @@ jobs:
     - name: Test
       run: |
         WEBOTS_HOME=/Volumes/Webots/Webots.app
+        PATH=$WEBOTS_HOME:$PATH
         . setenv
         stack test

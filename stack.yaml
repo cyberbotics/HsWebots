@@ -42,6 +42,8 @@ packages:
 extra-deps:
 - inline-c-0.9.0.0@sha256:7b5aa24a265cb50fd71f1a2595506f5a7dec98edcf40b7fbe617193668a90f31,3249
 - inline-c-cpp-0.4.0.1@sha256:bd5e43017806d746e670c3f8b51d825249fd8f0a901d9b4a9a9401f3aad0a52b,2124
+- VRML-0.1.0.0
+- pretty-simple-3.2.1.0@sha256:fb416fda58138fc443cde3cb2a46f7a276b246756ec12d90bf97c3b2ea5715d1,4137
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

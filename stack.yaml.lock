@@ -18,6 +18,20 @@ packages:
       sha256: 5ae85ee003d02229b1c9f6757c3ec6fbcabed77d51581789daed132bbf59e400
   original:
     hackage: inline-c-cpp-0.4.0.1@sha256:bd5e43017806d746e670c3f8b51d825249fd8f0a901d9b4a9a9401f3aad0a52b,2124
+- completed:
+    hackage: VRML-0.1.0.0@sha256:5d2736fcef8bf38750bae7e67c7cac522b9d3a473f435d5ff675f2b7f63fcdfc,2481
+    pantry-tree:
+      size: 852
+      sha256: d0c9699eb83bd8e7f4976bdaab725a521fe0e76912a4ec3224875d7a0dce4d60
+  original:
+    hackage: VRML-0.1.0.0
+- completed:
+    hackage: pretty-simple-3.2.1.0@sha256:fb416fda58138fc443cde3cb2a46f7a276b246756ec12d90bf97c3b2ea5715d1,4137
+    pantry-tree:
+      size: 1406
+      sha256: d2ef9decb877b056b106c6736cc7eec80a553ab1d2e4a175fa1b36c39fee2328
+  original:
+    hackage: pretty-simple-3.2.1.0@sha256:fb416fda58138fc443cde3cb2a46f7a276b246756ec12d90bf97c3b2ea5715d1,4137
 snapshots:
 - completed:
     size: 524162
