@@ -74,12 +74,6 @@ data Viewpoint = Viewpoint
   , near        :: Float
   } deriving (Generic,Show,Eq,ToNode)
 
-viewpoint = Viewpoint
-  { orientation = (-1,0,0,1.57)
-  , position    = (0,171.0768261655035,0.07181023813347440)
-  , near        = 3.0
-  }
-
 data Floor = Floor
   { translation :: (Float,Float,Float)
   , size        :: (Float,Float)
