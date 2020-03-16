@@ -48,10 +48,10 @@ wb_camera_get_sampling_period :: WbDeviceTag -> IO CInt
 wb_camera_get_sampling_period tag =
    [C.exp| int { wb_camera_get_sampling_period($(WbDeviceTag tag)) } |]
 
-wb_camera_get_image :: WbDeviceTag -> IO (I.Image I.PixelRGBA8)
+wb_camera_get_image :: WbDeviceTag -> IO (I.Image I.PixelRGB8)
 wb_camera_get_image tag = do
-  let channel = 4
-      zero = I.PixelRGBA8 0 0 0 0
+  let channel = 3
+      zero = I.PixelRGB8 0 0 0
   width <- fromIntegral <$> wb_camera_get_width tag
   height <- fromIntegral <$> wb_camera_get_height tag
   ptr1 <- [C.exp| const char* { wb_camera_get_image($(WbDeviceTag tag)) } |]
@@ -62,11 +62,17 @@ wb_camera_get_image tag = do
     throwIO $ userError  $ "vector's length(" ++ show len ++ ") is not the same as image' one."
   else do
     F.withForeignPtr fptr $ \ptr2 -> do
-      BSI.memcpy (F.castPtr ptr2) (F.castPtr ptr1) len
---      return $ I.pixelMap bgr2rgb img
+      let dst = (F.castPtr ptr2)
+          src = (F.castPtr ptr1)
+          len' = fromIntegral len
+      [C.exp| void {
+         for(int i=0;i<$(int len')/3;i++){
+           $(char* dst)[3*i]   = $(char* src)[4*i+2];
+           $(char* dst)[3*i+1] = $(char* src)[4*i+1];
+           $(char* dst)[3*i+2] = $(char* src)[4*i];
+         }
+      }|]
       return $ img
-  where
-    bgr2rgb (I.PixelRGBA8 b g r a) = I.PixelRGBA8 r g b a
   
 wb_camera_get_width :: WbDeviceTag -> IO CInt 
 wb_camera_get_width tag =
